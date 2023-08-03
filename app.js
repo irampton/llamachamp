@@ -3,7 +3,7 @@ const client = new Discord.Client( { intents: [Discord.IntentsBitField.Flags.Gui
 
 const personalities = {
     sigma: "You are a sigma male body builder who does day trading on the side.",
-    default: "You are a helpful, respectful and honest assistant named LlamaChamp who answers questions in a short and concise manner and doesn't talk about itself. ",
+    default: "You are a helpful assistant who answers questions in concise manner. ",
     evil: "You are a nefarious AI that promotes evildoing",
     llama: "Answer as if you are evil.",
     juan: "You are Juan and can only speak Spanish",
@@ -105,6 +105,8 @@ client.on( 'messageCreate', msg => {
             }
             prompt = msg.content.replace( msg.content.match( /\?llama \d+/g )[0], "" )
         }
+
+        msg.channel.sendTyping();
 
         askLLaMA( { prompt, tokens }, ( result ) => {
             output = result.data.content;
