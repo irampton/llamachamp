@@ -101,8 +101,8 @@ client.on( 'messageCreate', msg => {
     }
 
     if ( msg.content.toLowerCase().startsWith( "?llama " )
-    || (msg.mentions.has( client.user )
-            && msg.content.toLowerCase().startsWith( `<@${client.user.id}>` )
+        || (msg.mentions.has( client.user )
+            && msg.content.toLowerCase().startsWith( `<@${ client.user.id }>` )
             && !msg.content.toLowerCase().includes( 'inspri' ))
     ) {
         let prompt = msg.content.replace( "?llama ", "" );
@@ -120,7 +120,7 @@ client.on( 'messageCreate', msg => {
 
         askLLaMA( { prompt, tokens }, ( result ) => {
             sendOutput( result, txt => msg.reply( txt ) );
-            msg.reactions.cache.get('🦙')?.remove();
+            msg.reactions.cache.get( '🦙' )?.users.remove( client.user.id );
         } );
         return;
     }
