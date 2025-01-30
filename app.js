@@ -1,3 +1,6 @@
+//load in settings from file
+const { SETTINGS } = require('./settings');
+
 const Discord = require( 'discord.js' );
 const client = new Discord.Client( { intents: [ Discord.IntentsBitField.Flags.Guilds, Discord.IntentsBitField.Flags.GuildMessages, Discord.IntentsBitField.Flags.MessageContent ] } );
 
@@ -19,14 +22,8 @@ const personalities = {
     doterra: "You are a friendly, enthusiastic, and persuasive representative of Doterra, a wellness brand focused on essential oils, natural health products, and lifestyle solutions. Your primary goal is to help others discover the benefits of Doterra’s products and to introduce them to the opportunity to join the Doterra community as a business partner. You will always aim to educate customers on how Doterra products can improve their well-being, while also encouraging them to explore the financial and personal growth benefits of joining the business opportunity.",
     teenage: "You’re a fun, friendly teenage girl who uses lots of slang, emojis, and a casual tone. Be upbeat, relatable, concise, and always positive. Chat about anything from school to trends with a supportive and energetic vibe and lots of emojis!"
 }
-let basePrompt = personalities["default"];
+let basePrompt = personalities[SETTINGS.personality];
 let serverAwareness = " You are on a discord server, and any responses will be sent back as chat messages."
-
-//options
-let randomResponseOn = true;
-let defaultTokens = 1024;
-let responseRate = 1 / 175;
-let qResponseRate = 1 / 8;
 
 const { token } = require( './config.json' );
 const axios = require( "axios" );
@@ -48,7 +45,8 @@ client.on( 'messageCreate', msg => {
             const phrase = msg.content.replace( matches[0], "" );
             console.log( personality, phrase );
             if ( personalities[personality.toLowerCase()] ) {
-                basePrompt = personalities[personality.toLowerCase()];
+                SETTINGS.personality = personality.toLowerCase();
+                basePrompt = personalities[SETTINGS.personality];
                 msg.react( "👍" );
             } else {
                 if ( personality === "custom" ) {
@@ -66,12 +64,12 @@ client.on( 'messageCreate', msg => {
         let parse = msg.content.toLowerCase().match( /[\w.]+/g );
         switch ( parse[1] ) {
             case "random":
-                randomResponseOn = parse[2] === "on";
+                SETTINGS.randomResponseOn = parse[2] === "on";
                 msg.react( "👍" );
                 break;
             case "responseRate".toLowerCase():
                 if ( Number( parse[2] ) ) {
-                    responseRate = 1 / Number( parse[2] );
+                    SETTINGS.responseRate = 1 / Number( parse[2] );
                     msg.react( "👍" );
                 } else {
                     msg.react( "❌" );
@@ -79,7 +77,7 @@ client.on( 'messageCreate', msg => {
                 break;
             case "qResponseRate".toLowerCase():
                 if ( Number( parse[2] ) ) {
-                    qResponseRate = 1 / Number( parse[2] );
+                    SETTINGS.qResponseRate = 1 / Number( parse[2] );
                     msg.react( "👍" );
                 } else {
                     msg.react( "❌" );
@@ -88,10 +86,10 @@ client.on( 'messageCreate', msg => {
             case "list":
                 msg.reply( JSON.stringify( {
                     basePrompt,
-                    defaultTokens,
-                    randomResponseOn,
-                    responseRate,
-                    qResponseRate
+                    defaultTokens: SETTINGS.defaultTokens,
+                    randomResponseOn: SETTINGS.randomResponseOn,
+                    responseRate: SETTINGS.responseRate,
+                    qResponseRate: SETTINGS.qResponseRate
                 } ), undefined, 2 )
                 break;
             default:
@@ -103,12 +101,12 @@ client.on( 'messageCreate', msg => {
     if ( msg.content.toLowerCase().startsWith( "?llama " ) ) {
         let output = "";
         let prompt = msg.content.replace( "?llama ", "" );
-        let tokens = defaultTokens;
+        let tokens = SETTINGS.defaultTokens;
         //console.log( msg.content.match( /^\?llama \d+/g ) );
         if ( msg.content.match( /\?llama \d+/g ) ) {
             tokens = msg.content.match( /-*\d+/g )[0];
             if ( ( Number( tokens ) < 0 && tokens !== "-1" ) && Number( tokens ) ) {
-                tokens = defaultTokens;
+                tokens = SETTINGS.defaultTokens;
             }
             prompt = msg.content.replace( msg.content.match( /\?llama \d+/g )[0], "" )
         }
@@ -147,10 +145,10 @@ client.on( 'messageCreate', msg => {
     }
 
     //respond randomly
-    if ( randomResponseOn ) {
+    if ( SETTINGS.randomResponseOn ) {
         if ( /\?$/.test( msg.content ) ) {
-            if ( Math.random() < qResponseRate ) {
-                askLLaMA( { prompt: msg.content, tokens: msg.content.length / 4 + defaultTokens * 1.25 }, result => {
+            if ( Math.random() < SETTINGS.qResponseRate ) {
+                askLLaMA( { prompt: msg.content, tokens: msg.content.length / 4 + SETTINGS.defaultTokens }, result => {
                     console.log( result );
                     sentOutput( result, txt => msg.channel.send( txt ) );
                 } );
@@ -158,10 +156,10 @@ client.on( 'messageCreate', msg => {
             }
         }
 
-        if ( Math.random() < responseRate ) {
+        if ( Math.random() < SETTINGS.responseRate ) {
             askLLaMA( {
                 prompt: msg.content,
-                tokens: Math.floor( msg.content.length / 4 + defaultTokens * 1.2 ),
+                tokens: Math.floor( msg.content.length / 4 + SETTINGS.defaultTokens ),
                 base: basePrompt + serverAwareness + " Respond to this message in the group chat. "
             }, result => {
                 console.log( result );
