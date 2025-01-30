@@ -92,7 +92,7 @@ client.on( 'messageCreate', msg => {
                     randomResponseOn: SETTINGS.randomResponseOn,
                     responseRate: SETTINGS.responseRate,
                     qResponseRate: SETTINGS.qResponseRate
-                } ), undefined, 2 )
+                } ), null, 2 )
                 break;
             default:
                 msg.react( "👎" );
@@ -100,11 +100,13 @@ client.on( 'messageCreate', msg => {
         return;
     }
 
-    if ( msg.content.toLowerCase().startsWith( "?llama " ) ) {
-        let output = "";
+    if ( msg.content.toLowerCase().startsWith( "?llama " )
+    || (msg.mentions.has( client.user )
+            && msg.content.toLowerCase().startsWith( `<@${client.user.id}>` )
+            && !msg.content.toLowerCase().includes( 'inspri' ))
+    ) {
         let prompt = msg.content.replace( "?llama ", "" );
         let tokens = SETTINGS.defaultTokens;
-        //console.log( msg.content.match( /^\?llama \d+/g ) );
         if ( msg.content.match( /\?llama \d+/g ) ) {
             tokens = msg.content.match( /-*\d+/g )[0];
             if ( (Number( tokens ) < 0 && tokens !== "-1") && Number( tokens ) ) {
@@ -117,7 +119,6 @@ client.on( 'messageCreate', msg => {
         msg.react( "🦙" );
 
         askLLaMA( { prompt, tokens }, ( result ) => {
-            //console.log( result );
             sendOutput( result, txt => msg.reply( txt ) );
         } );
         return;
@@ -132,35 +133,38 @@ client.on( 'messageCreate', msg => {
         msg.react( "👀" );
     }
 
-    //don't auto reply below this line:
+    // don't self reply to any conditions below this line:
     if ( msg.author.bot ) {
         return false;
     }
 
-    if ( msg.content.toLowerCase().includes( "weather" ) || msg.content.toLowerCase().includes( "temperature" ) || msg.content.toLowerCase().includes( "wind" ) || msg.content.toLowerCase().includes( "rain" ) ) {
+    if ( msg.content.toLowerCase().includes( "weather" )
+        || msg.content.toLowerCase().includes( "temperature" )
+        || msg.content.toLowerCase().includes( "wind" )
+        || msg.content.toLowerCase().includes( "rain" ) ) {
         sendWeatherReport( msg.content.replace( /<@\d+> /, "" ), msg.channel );
         return;
     }
 
-    //respond randomly
+    // respond randomly
     if ( SETTINGS.randomResponseOn ) {
+        // if the message ends in a question
         if ( /\?$/.test( msg.content ) ) {
             if ( Math.random() < SETTINGS.qResponseRate ) {
                 askLLaMA( { prompt: msg.content, tokens: msg.content.length / 4 + SETTINGS.defaultTokens }, result => {
-                    //console.log( result );
                     sendOutput( result, txt => msg.channel.send( txt ) );
                 } );
                 return;
             }
         }
 
+        // if the message does not end in a question
         if ( Math.random() < SETTINGS.responseRate ) {
             askLLaMA( {
                 prompt: msg.content,
                 tokens: Math.floor( msg.content.length / 4 + SETTINGS.defaultTokens ),
                 base: basePrompt + serverAwareness + " Respond to this message in the group chat. "
             }, result => {
-                //console.log( result );
                 sendOutput( result, txt => msg.channel.send( txt ) );
             } );
             return;
