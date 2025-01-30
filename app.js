@@ -120,6 +120,7 @@ client.on( 'messageCreate', msg => {
 
         askLLaMA( { prompt, tokens }, ( result ) => {
             sendOutput( result, txt => msg.reply( txt ) );
+            msg.reactions.cache.get('🦙')?.remove();
         } );
         return;
     }
