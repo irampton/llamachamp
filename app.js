@@ -5,7 +5,13 @@ const { setNextInspirationalMessage, generateInspirationMessage } = require( './
 const { sendWeatherReport } = require( './weather' );
 
 const Discord = require( 'discord.js' );
-const client = new Discord.Client( { intents: [ Discord.IntentsBitField.Flags.Guilds, Discord.IntentsBitField.Flags.GuildMessages, Discord.IntentsBitField.Flags.MessageContent ] } );
+const client = new Discord.Client( {
+    intents: [
+    Discord.IntentsBitField.Flags.Guilds,
+        Discord.IntentsBitField.Flags.GuildMessages,
+        Discord.IntentsBitField.Flags.MessageContent,
+        Discord.IntentsBitField.Flags.DirectMessages
+    ] } );
 
 const personalities = {
     sigma: "You are a sigma male body builder who does day trading on the side.",
@@ -39,6 +45,14 @@ client.on( 'ready', () => {
 } );
 
 client.on( 'messageCreate', msg => {
+
+    if (!msg.guild) {  // Check if it's a DM
+        const userMessage = msg.content;
+        askLLaMA( { prompt: userMessage, tokens: SETTINGS.defaultTokens }, ( result ) => {
+            sendOutput( result, txt => msg.author.send( txt ) );
+        } );
+    }
+
     if ( msg.content === 'ping' ) {
         msg.reply( 'pong' );
         return;
