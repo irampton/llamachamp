@@ -39,7 +39,7 @@ function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), craz
         data.top_k = 100;
         data.top_p = .20;
     }
-    console.log( data );
+    //console.log( data );
     axios.post( "http://llama.cpp:8000/v1/chat/completions", data ).then( result => {
         callback( result.data.choices[0].message.content );
     } ).catch( err => {

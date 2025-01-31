@@ -7,11 +7,16 @@ const { sendWeatherReport } = require( './weather' );
 const Discord = require( 'discord.js' );
 const client = new Discord.Client( {
     intents: [
-    Discord.IntentsBitField.Flags.Guilds,
-        Discord.IntentsBitField.Flags.GuildMessages,
-        Discord.IntentsBitField.Flags.MessageContent,
-        Discord.IntentsBitField.Flags.DirectMessages
-    ] } );
+        Discord.GatewayIntentBits.Guilds,
+        Discord.GatewayIntentBits.GuildMessages,
+        Discord.GatewayIntentBits.MessageContent,
+        Discord.GatewayIntentBits.DirectMessages
+    ],
+    partials: [
+        Discord.Partials.Channel,
+        Discord.Partials.Message
+    ]
+} );
 
 const personalities = {
     sigma: "You are a sigma male body builder who does day trading on the side.",
@@ -41,29 +46,24 @@ global.serverAwareness = " You are on a discord server, and any responses will b
 const { token } = require( './config.json' );
 
 client.on( 'ready', () => {
-    console.log( `Logged in as ${ client.user.tag }!` );
+    console.log( `Logged in as ${client.user.tag}!` );
 } );
 
 client.on( 'messageCreate', msg => {
-
-    if (!msg.guild) {  // Check if it's a DM
-        const userMessage = msg.content;
-        askLLaMA( { prompt: userMessage, tokens: SETTINGS.defaultTokens }, ( result ) => {
-            sendOutput( result, txt => msg.author.send( txt ) );
-        } );
-    }
 
     if ( msg.content === 'ping' ) {
         msg.reply( 'pong' );
         return;
     }
-    if ( msg.content.toLowerCase().startsWith( "?llamaPersonality".toLowerCase() ) || msg.content.toLowerCase().startsWith( "?LP".toLowerCase() ) ) {
+
+    if ( msg.content.toLowerCase().startsWith( "?llamaPersonality".toLowerCase() )
+        || msg.content.toLowerCase().startsWith( "?LP".toLowerCase() ) ) {
         msg.content = msg.content.replace( "?LP", "?llamaPersonality" );
         let matches = msg.content.match( /\?llamaPersonality \w+/g );
         if ( matches?.length > 0 ) {
             const personality = matches[0].replace( "?llamaPersonality ", "" );
             const phrase = msg.content.replace( matches[0], "" );
-            console.log( personality, phrase );
+            //console.log( personality, phrase );
             if ( personalities[personality.toLowerCase()] ) {
                 SETTINGS.personality = personality.toLowerCase();
                 basePrompt = personalities[SETTINGS.personality];
@@ -76,6 +76,24 @@ client.on( 'messageCreate', msg => {
             }
 
         }
+        return;
+    }
+
+    // Handle DM's separate
+    if ( !msg.guild ) {
+        const userMessage = msg.content;
+        askLLaMA( { prompt: userMessage, tokens: SETTINGS.defaultTokens }, ( result ) => {
+            sendOutput( result, txt => msg.channel.send( txt ) );
+        } );
+        return;
+    }
+
+    // Phoenix Mode
+    if ( msg.content.toLowerCase().startsWith( `<@${client.user.id}> reboot yourself` )
+        || msg.content.toLowerCase().startsWith( `<@${client.user.id}> reboot now` )
+        || msg.content.toLowerCase().startsWith( `<@${client.user.id}> phoenix` ) ) {
+        console.log("Attempting shutdown/reboot");
+        process.exit(42);
         return;
     }
 
@@ -120,7 +138,7 @@ client.on( 'messageCreate', msg => {
 
     if ( msg.content.toLowerCase().startsWith( "?llama " )
         || (msg.mentions.has( client.user )
-            && msg.content.toLowerCase().startsWith( `<@${ client.user.id }>` )
+            && msg.content.toLowerCase().startsWith( `<@${client.user.id}>` )
             && !msg.content.toLowerCase().includes( 'inspri' ))
     ) {
         let prompt = msg.content.replace( "?llama ", "" );
