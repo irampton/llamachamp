@@ -20,21 +20,40 @@ function sendOutput( msg, send ) {
 }
 
 function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), crazy = false }, callback ) {
-    const data = {
-        //prompt: `[INST] <<SYS>> You are a helpful, respectful and honest assistant.  <</SYS>> ${prompt} [/INST]`,
-        //prompt: `[INST] <<SYS>> ${ base } <</SYS>> ${ prompt } [/INST]`,
+    let data = {
         messages: [
             {
                 content: base,
                 role: 'system'
-            },
-            {
-                content: prompt,
-                role: 'system'
             }
         ],
         n_predict: Number( tokens )
+    };
+
+    if ( typeof prompt === 'string' ) {
+        data.messages.push(
+            {
+                content: prompt,
+                role: 'user'
+            }
+        );
+    } else if ( Array.isArray( prompt ) ) {
+        //prompt is an array of messages, add each individually
+        prompt.forEach( msg => {
+            if ( msg.isBot ) {
+                data.messages.push( {
+                    content: msg.content,
+                    role: 'assistant'
+                } );
+            } else {
+                data.messages.push( {
+                    content: `${ msg.sender } (${ new Date( msg.timestamp ).toLocaleString() }): ${ msg.content }`,
+                    role: 'user'
+                } );
+            }
+        } );
     }
+
     if ( crazy ) {
         data.top_k = 100;
         data.top_p = .20;

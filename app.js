@@ -46,18 +46,21 @@ global.serverAwareness = " You are on a discord server, and any responses will b
 const { token } = require( './config.json' );
 
 client.on( 'ready', () => {
-    console.log( `Logged in as ${client.user.tag}!` );
+    console.log( `Logged in as ${ client.user.tag }!` );
 } );
 
 client.on( 'messageCreate', msg => {
+
+    // don't self reply, ever
+    if ( msg.author.bot ) {
+        return false;
+    }
 
     if ( msg.content === 'ping' ) {
         msg.reply( 'pong' );
         return;
     }
-
-    if ( msg.content.toLowerCase().startsWith( "?llamaPersonality".toLowerCase() )
-        || msg.content.toLowerCase().startsWith( "?LP".toLowerCase() ) ) {
+    if ( msg.content.toLowerCase().startsWith( "?llamaPersonality".toLowerCase() ) || msg.content.toLowerCase().startsWith( "?LP".toLowerCase() ) ) {
         msg.content = msg.content.replace( "?LP", "?llamaPersonality" );
         let matches = msg.content.match( /\?llamaPersonality \w+/g );
         if ( matches?.length > 0 ) {
@@ -79,21 +82,44 @@ client.on( 'messageCreate', msg => {
         return;
     }
 
-    // Handle DM's separate
+    // Handle DMs separate
     if ( !msg.guild ) {
-        const userMessage = msg.content;
-        askLLaMA( { prompt: userMessage, tokens: SETTINGS.defaultTokens }, ( result ) => {
-            sendOutput( result, txt => msg.channel.send( txt ) );
-        } );
+        msg.channel.messages.fetch( { limit: 5 } ) // Adjust limit if you need to fetch more than 100 messages
+            .then( messages => {
+                // Filter messages from the past 12 hours or the last 5 messages, whichever is fewer
+                const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+                const recentMessages = messages.filter( message => {
+                    return message.createdTimestamp >= twelveHoursAgo;
+                } );
+
+                // Keep up to the last 5 messages (or less if there are fewer messages)
+                const messageHistory = [];
+                let messageCount = 0;
+
+                recentMessages.sort( ( a, b ) => a.createdTimestamp - b.createdTimestamp ).forEach( message => {
+                    if ( messageCount >= 5 ) return;
+                    messageHistory.push( {
+                        sender: message.author.username,
+                        timestamp: message.createdTimestamp,
+                        content: message.content,
+                        isBot: message.author.id === client.user.id
+                    } );
+                    messageCount++;
+                } );
+
+                askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                    sendOutput( result, txt => msg.channel.send( txt ) );
+                } );
+            } );
         return;
     }
 
     // Phoenix Mode
-    if ( msg.content.toLowerCase().startsWith( `<@${client.user.id}> reboot yourself` )
-        || msg.content.toLowerCase().startsWith( `<@${client.user.id}> reboot now` )
-        || msg.content.toLowerCase().startsWith( `<@${client.user.id}> phoenix` ) ) {
-        console.log("Attempting shutdown/reboot");
-        process.exit(42);
+    if ( msg.content.toLowerCase().startsWith( `<@${ client.user.id }> reboot yourself` )
+        || msg.content.toLowerCase().startsWith( `<@${ client.user.id }> reboot now` )
+        || msg.content.toLowerCase().startsWith( `<@${ client.user.id }> phoenix` ) ) {
+        console.log( "Attempting shutdown/reboot" );
+        process.exit( 42 );
         return;
     }
 
@@ -138,7 +164,7 @@ client.on( 'messageCreate', msg => {
 
     if ( msg.content.toLowerCase().startsWith( "?llama " )
         || (msg.mentions.has( client.user )
-            && msg.content.toLowerCase().startsWith( `<@${client.user.id}>` )
+            && msg.content.toLowerCase().startsWith( `<@${ client.user.id }>` )
             && !msg.content.toLowerCase().includes( 'inspri' ))
     ) {
         let prompt = msg.content.replace( "?llama ", "" );
