@@ -44,6 +44,7 @@ global.basePrompt = personalities[SETTINGS.personality];
 global.serverAwareness = " You are on a discord server, and any responses will be sent back as chat messages."
 
 const { token } = require( './config.json' );
+const { get } = require( "axios" );
 
 client.on( 'ready', () => {
     console.log( `Logged in as ${ client.user.tag }!` );
@@ -84,33 +85,12 @@ client.on( 'messageCreate', msg => {
 
     // Handle DMs separate
     if ( !msg.guild ) {
-        msg.channel.messages.fetch( { limit: 5 } ) // Adjust limit if you need to fetch more than 100 messages
-            .then( messages => {
-                // Filter messages from the past 12 hours or the last 5 messages, whichever is fewer
-                const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
-                const recentMessages = messages.filter( message => {
-                    return message.createdTimestamp >= twelveHoursAgo;
-                } );
-
-                // Keep up to the last 5 messages (or less if there are fewer messages)
-                const messageHistory = [];
-                let messageCount = 0;
-
-                recentMessages.sort( ( a, b ) => a.createdTimestamp - b.createdTimestamp ).forEach( message => {
-                    if ( messageCount >= 5 ) return;
-                    messageHistory.push( {
-                        sender: message.author.username,
-                        timestamp: message.createdTimestamp,
-                        content: message.content,
-                        isBot: message.author.id === client.user.id
-                    } );
-                    messageCount++;
-                } );
-
-                askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
-                    sendOutput( result, txt => msg.channel.send( txt ) );
-                } );
+        const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+        getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
+            askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                sendOutput( result, txt => msg.channel.send( txt ) );
             } );
+        } );
         return;
     }
 
@@ -214,8 +194,11 @@ client.on( 'messageCreate', msg => {
         // if the message ends in a question
         if ( /\?$/.test( msg.content ) ) {
             if ( Math.random() < SETTINGS.qResponseRate ) {
-                askLLaMA( { prompt: msg.content, tokens: msg.content.length / 4 + SETTINGS.defaultTokens }, result => {
-                    sendOutput( result, txt => msg.channel.send( txt ) );
+                const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+                getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
+                    askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                        sendOutput( result, txt => msg.channel.send( txt ) );
+                    } );
                 } );
                 return;
             }
@@ -223,12 +206,11 @@ client.on( 'messageCreate', msg => {
 
         // if the message does not end in a question
         if ( Math.random() < SETTINGS.responseRate ) {
-            askLLaMA( {
-                prompt: msg.content,
-                tokens: Math.floor( msg.content.length / 4 + SETTINGS.defaultTokens ),
-                base: basePrompt + serverAwareness + " Respond to this message in the group chat. "
-            }, result => {
-                sendOutput( result, txt => msg.channel.send( txt ) );
+            const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+            getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
+                askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                    sendOutput( result, txt => msg.channel.send( txt ) );
+                } );
             } );
             return;
         }
@@ -236,6 +218,33 @@ client.on( 'messageCreate', msg => {
 } );
 
 client.login( token );
+
+function getPastMessages( channel, count, timestamp, callback ) {
+    channel.messages.fetch( { limit: count } ) // Adjust limit if you need to fetch more than 100 messages
+        .then( messages => {
+            // Filter messages from the past timestamp or the last 5 messages, whichever is fewer
+            const recentMessages = messages.filter( message => {
+                return message.createdTimestamp >= timestamp;
+            } );
+
+            // Keep up to the last 5 messages (or less if there are fewer messages)
+            const messageHistory = [];
+            let messageCount = 0;
+
+            recentMessages.sort( ( a, b ) => a.createdTimestamp - b.createdTimestamp ).forEach( message => {
+                if ( messageCount >= 5 ) return;
+                messageHistory.push( {
+                    sender: message.author.username,
+                    timestamp: message.createdTimestamp,
+                    content: message.content,
+                    isBot: message.author.id === client.user.id
+                } );
+                messageCount++;
+            } );
+
+            callback( messageHistory );
+        } );
+}
 
 async function setUpInspire() {
     setNextInspirationalMessage( await client.channels.fetch( '705154122617323601' ) );
