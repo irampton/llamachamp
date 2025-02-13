@@ -181,10 +181,7 @@ client.on( 'messageCreate', msg => {
         return false;
     }
 
-    if ( msg.content.toLowerCase().includes( "weather" )
-        || msg.content.toLowerCase().includes( "temperature" )
-        || msg.content.toLowerCase().includes( "wind" )
-        || msg.content.toLowerCase().includes( "rain" ) ) {
+    if ( /(\b(rain|wind|weather|temperature)\b)/.test( msg.content.toLowerCase() ) ) {
         sendWeatherReport( msg.content.replace( /<@\d+> /, "" ), msg.channel );
         return;
     }
