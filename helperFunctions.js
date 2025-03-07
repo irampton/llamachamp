@@ -5,6 +5,10 @@ module.exports = {
     randomInt
 };
 
+const timeStringOptions = {
+    timeZone: 'America/Denver'
+};
+
 function sendOutput( msg, send ) {
     if ( msg.length > 2000 ) {
         while ( msg.length > 2000 ) {
@@ -47,10 +51,15 @@ function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), craz
                 } );
             } else {
                 data.messages.push( {
-                    content: `${ msg.sender } (${ new Date( msg.timestamp ).toLocaleString() }): ${ msg.content }`,
+                    content: `${ msg.sender } (${ new Date( msg.timestamp ).toLocaleString('en-US', timeStringOptions) }): ${ msg.content }`,
                     role: 'user'
                 } );
             }
+        } );
+        // Add a prompt to get it to output something coherent
+        data.messages.push( {
+            content: `The preceding messages (with added timestamps and usernames) were part of a conversation on a discord server that you are on. Your full response will be sent back to the server. Please respond to any questions and/or contribute to the conversation.`,
+            role: 'user'
         } );
     }
 
