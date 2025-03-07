@@ -46,6 +46,7 @@ global.serverAwareness = " You are on a discord server, and any responses will b
 const baseMessageHistoryPrompt =
     `The preceding messages (with added timestamps and usernames) are part of a conversation on a discord server that you are on. 
 Your full response will be sent back a single message to the server. 
+Everyone knows who you are; you do not need to introduce yourself.
 Don't speak for anyone else, be yourself!`;
 const messageHistoryPrompt = `${ baseMessageHistoryPrompt }
 Please respond with a single message AS YOURSELF to answer any questions and/or contribute to the conversation.`;
