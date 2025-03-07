@@ -58,7 +58,7 @@ function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), craz
         } );
         // Add a prompt to get it to output something coherent
         data.messages.push( {
-            content: `The preceding messages (with added timestamps and usernames) were part of a conversation on a discord server that you are on. Your full response will be sent back to the server. Please respond to any questions and/or contribute to the conversation.`,
+            content: `The preceding messages (with added timestamps and usernames) were part of a conversation on a discord server that you are on. Your full response will be sent back a single message to the server. Please respond with a single message AS YOURSELF to answer any questions and/or contribute to the conversation.`,
             role: 'user'
         } );
     }
