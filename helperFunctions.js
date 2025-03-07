@@ -23,7 +23,7 @@ function sendOutput( msg, send ) {
     }
 }
 
-function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), crazy = false }, callback ) {
+function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), crazy = false, messageHistoryPrompt }, callback ) {
     let data = {
         messages: [
             {
@@ -58,10 +58,7 @@ function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), craz
         } );
         // Add a prompt to get it to output something coherent
         data.messages.push( {
-            content: `The preceding messages (with added timestamps and usernames) are part of a conversation on a discord server that you are on. 
-                    Your full response will be sent back a single message to the server. 
-                    Don't speak for anyone else, be yourself!
-                    Please respond with a single message AS YOURSELF to answer any questions and/or contribute to the conversation.`,
+            content: messageHistoryPrompt,
             role: 'user'
         } );
     }

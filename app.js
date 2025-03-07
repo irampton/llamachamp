@@ -43,6 +43,13 @@ const personalities = {
 global.basePrompt = personalities[SETTINGS.personality];
 global.serverAwareness = " You are on a discord server, and any responses will be sent back as chat messages.";
 
+const baseMessageHistoryPrompt =
+    `The preceding messages (with added timestamps and usernames) are part of a conversation on a discord server that you are on. 
+Your full response will be sent back a single message to the server. 
+Don't speak for anyone else, be yourself!`;
+const messageHistoryPrompt = `${ baseMessageHistoryPrompt }
+Please respond with a single message AS YOURSELF to answer any questions and/or contribute to the conversation.`;
+
 const { token } = require( './config.json' );
 const { get } = require( "axios" );
 
@@ -87,7 +94,7 @@ client.on( 'messageCreate', msg => {
     if ( !msg.guild ) {
         const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
         getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
-            askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+            askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens, messageHistoryPrompt }, ( result ) => {
                 sendOutput( result, txt => msg.channel.send( txt ) );
             } );
         } );
@@ -142,11 +149,7 @@ client.on( 'messageCreate', msg => {
         return;
     }
 
-    if ( msg.content.toLowerCase().startsWith( "?llama " )
-        || (msg.mentions.has( client.user )
-            && msg.content.toLowerCase().startsWith( `<@${ client.user.id }>` )
-            && !msg.content.toLowerCase().includes( 'inspri' ))
-    ) {
+    if ( msg.content.toLowerCase().startsWith( "?llama " ) ) {
         let prompt = msg.content.replace( "?llama ", "" );
         let tokens = SETTINGS.defaultTokens;
         if ( msg.content.match( /\?llama \d+/g ) ) {
@@ -167,15 +170,6 @@ client.on( 'messageCreate', msg => {
         return;
     }
 
-    //if mentioned
-    if ( msg.mentions.has( client.user ) ) {
-        if ( msg.content.toLowerCase().includes( 'inspir' ) ) {
-            generateInspirationMessage( msg.channel, false, true );
-            return;
-        }
-        msg.react( "👀" );
-    }
-
     // don't self reply to any conditions below this line:
     if ( msg.author.bot ) {
         return false;
@@ -186,6 +180,29 @@ client.on( 'messageCreate', msg => {
         return;
     }
 
+    //if mentioned
+    if ( msg.mentions.has( client.user ) ) {
+        if ( msg.content.toLowerCase().includes( 'inspir' ) ) {
+            generateInspirationMessage( msg.channel, false, true );
+            return;
+        } else {
+            const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+            getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
+                askLLaMA( {
+                    prompt: messageHistory,
+                    tokens: SETTINGS.defaultTokens,
+                    messageHistoryPrompt: `${ baseMessageHistoryPrompt }
+You were mentioned in the last message.
+Respond with a single message AS YOURSELF to the last message to answer any questions and/or contribute to the conversation.`
+                }, ( result ) => {
+                    sendOutput( result, txt => msg.channel.send( txt ) );
+                } );
+            } );
+            return;
+        }
+        //msg.react( "👀" );
+    }
+
     // respond randomly
     if ( SETTINGS.randomResponseOn ) {
         // if the message ends in a question
@@ -193,7 +210,11 @@ client.on( 'messageCreate', msg => {
             if ( Math.random() < SETTINGS.qResponseRate ) {
                 const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
                 getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
-                    askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                    askLLaMA( {
+                        prompt: messageHistory,
+                        tokens: SETTINGS.defaultTokens,
+                        messageHistoryPrompt
+                    }, ( result ) => {
                         sendOutput( result, txt => msg.channel.send( txt ) );
                     } );
                 } );
@@ -205,7 +226,11 @@ client.on( 'messageCreate', msg => {
         if ( Math.random() < SETTINGS.responseRate ) {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
-                askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                askLLaMA( {
+                    prompt: messageHistory,
+                    tokens: SETTINGS.defaultTokens,
+                    messageHistoryPrompt
+                }, ( result ) => {
                     sendOutput( result, txt => msg.channel.send( txt ) );
                 } );
             } );
@@ -231,7 +256,7 @@ function getPastMessages( channel, count, timestamp, callback ) {
             recentMessages.sort( ( a, b ) => a.createdTimestamp - b.createdTimestamp ).forEach( message => {
                 if ( messageCount >= 5 ) return;
                 messageHistory.push( {
-                    sender: message.author.username,
+                    sender: message.author.displayName,
                     timestamp: message.createdTimestamp,
                     content: message.content,
                     isBot: message.author.id === client.user.id
