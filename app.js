@@ -41,7 +41,7 @@ const personalities = {
 
 }
 global.basePrompt = personalities[SETTINGS.personality];
-global.serverAwareness = " You are on a discord server, and any responses will be sent back as chat messages."
+global.serverAwareness = " You are on a discord server, and any responses will be sent back as chat messages.";
 
 const { token } = require( './config.json' );
 const { get } = require( "axios" );
