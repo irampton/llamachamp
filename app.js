@@ -175,10 +175,10 @@ client.on( 'messageCreate', msg => {
         return false;
     }
 
-	// don't reply to @everyone or @here
-	if (msg.mentions.everyone) {
-		return;
-	}
+    // don't reply to @everyone or @here
+    if ( msg.mentions.everyone ) {
+        return;
+    }
 
     if ( /(\b(rain|wind|weather|temperature)\b)/.test( msg.content.toLowerCase() ) ) {
         sendWeatherReport( msg.content.replace( /<@\d+> /, "" ), msg.channel );
