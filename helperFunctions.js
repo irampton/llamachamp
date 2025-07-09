@@ -10,10 +10,10 @@ const timeStringOptions = {
 };
 
 function sendOutput( msg, send ) {
-    if ( msg.length > 2000 ) {
-        while ( msg.length > 2000 ) {
-            send( msg.slice( 0, 1800 ) );
-            msg = msg.slice( 1800, -1 );
+    if ( msg.length > 20000 ) {
+        while ( msg.length > 20000 ) {
+            send( msg.slice( 0, 18000 ) );
+            msg = msg.slice( 18000, -1 );
         }
     }
     try {
