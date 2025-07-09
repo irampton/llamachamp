@@ -23,7 +23,7 @@ function sendOutput( msg, send ) {
     }
 }
 
-function askLLaMA( { prompt, tokens, base = basePrompt, crazy = false, messageHistoryPrompt }, callback ) {
+function askLLaMA( { prompt, tokens, base = basePrompt, crazy = false }, callback ) {
     let data = {
         messages: [
             {
@@ -55,11 +55,6 @@ function askLLaMA( { prompt, tokens, base = basePrompt, crazy = false, messageHi
                     role: 'user'
                 } );
             }
-        } );
-        // Add a prompt to get it to output something coherent
-        data.messages.push( {
-            content: messageHistoryPrompt,
-            role: 'user'
         } );
     }
 

@@ -76,7 +76,6 @@ Examples:
 }
 
 setBasePrompt();
-const messageHistoryPrompt = global.basePrompt;
 
 const { token } = require( './config.json' );
 const { get } = require( "axios" );
@@ -122,7 +121,7 @@ client.on( 'messageCreate', msg => {
     if ( !msg.guild ) {
         const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
         getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
-            askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens, messageHistoryPrompt }, ( result ) => {
+            askLLaMA( { prompt: messageHistory + "\n[Bot]", tokens: SETTINGS.defaultTokens }, ( result ) => {
                 sendOutput( result, txt => msg.channel.send( txt ) );
             } );
         } );
@@ -222,9 +221,8 @@ client.on( 'messageCreate', msg => {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                 askLLaMA( {
-                    prompt: messageHistory,
-                    tokens: SETTINGS.defaultTokens,
-                    messageHistoryPrompt: messageHistoryPrompt
+                    prompt: messageHistory + "\n[Bot]",
+                    tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
                     sendOutput( result, txt => msg.channel.send( txt ) );
                 } );
@@ -242,9 +240,8 @@ client.on( 'messageCreate', msg => {
                 const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
                 getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                     askLLaMA( {
-                        prompt: messageHistory,
-                        tokens: SETTINGS.defaultTokens,
-                        messageHistoryPrompt
+                        prompt: messageHistory + "\n[Bot]",
+                        tokens: SETTINGS.defaultTokens
                     }, ( result ) => {
                         sendOutput( result, txt => msg.channel.send( txt ) );
                     } );
@@ -258,9 +255,8 @@ client.on( 'messageCreate', msg => {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                 askLLaMA( {
-                    prompt: messageHistory,
-                    tokens: SETTINGS.defaultTokens,
-                    messageHistoryPrompt
+                    prompt: messageHistory + "\n[Bot]",
+                    tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
                     sendOutput( result, txt => msg.channel.send( txt ) );
                 } );
