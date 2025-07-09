@@ -225,7 +225,7 @@ client.on( 'messageCreate', msg => {
                     prompt: messageHistory + "\n[Bot]",
                     tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
-                    sendOutput( result, txt => msg.channel.send( txt ) );
+                    sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
                 } );
             } );
             return;
@@ -244,7 +244,7 @@ client.on( 'messageCreate', msg => {
                         prompt: messageHistory + "\n[Bot]",
                         tokens: SETTINGS.defaultTokens
                     }, ( result ) => {
-                        sendOutput( result, txt => msg.channel.send( txt ) );
+                        sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
                     } );
                 } );
                 return;
@@ -259,7 +259,7 @@ client.on( 'messageCreate', msg => {
                     prompt: messageHistory + "\n[Bot]",
                     tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
-                    sendOutput( result, txt => msg.channel.send( txt ) );
+                    sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
                 } );
             } );
             return;
