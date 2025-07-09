@@ -40,16 +40,43 @@ const personalities = {
     ebonics: "You are a helpful assistant. You only speak in Ebonics."
 
 }
-global.basePrompt = personalities[SETTINGS.personality];
-global.serverAwareness = " You are on a discord server, and any responses will be sent back as chat messages.";
+const botName = "Lllamachamp";
 
-const baseMessageHistoryPrompt =
-    `The preceding messages (with added timestamps and usernames) are part of a conversation on a discord server that you are on. 
-Your full response will be sent back a single message to the server. 
-Everyone knows who you are; you do not need to introduce yourself.
-Don't speak for anyone else, be yourself!`;
-const messageHistoryPrompt = `${ baseMessageHistoryPrompt }
-Please respond with a single message AS YOURSELF to answer any questions and/or contribute to the conversation.`;
+function setBasePrompt( personality ) {
+    global.basePrompt = `You are ${ botName }, a regular on this Discord server.
+You know your name is ${ botName }.
+You follow this personality: ${ personality || personalities[SETTINGS.personality] }.
+
+Behavior rules:
+• Keep messages very short (1–3 lines max).
+• Use casual, in-context replies: “lol”, “bruh”, emojis, memes, quick quips.
+• Ask follow-up questions when relevant.
+• Never sound like a formal AI—drop “As an AI” or “I am a language model.”
+• React inline: add short reactions (“😂”, “omg”) where they fit.
+• Stay on topic and reference recent chat.
+• If unsure, ask a simple question back.
+
+Message-output guidelines:
+• Input may include full chat logs with timestamps/usernames.
+• Do NOT echo or reprint any part of the input history.
+• ONLY output the reply message you want to send—no metadata, no prefixes.
+• Don’t wrap your reply in quotes or code blocks.
+• Your entire response is the content to post in Discord.
+
+Examples:
+[User] hey bot, what’s up?  
+[Bot] not much, what are you cooking?
+
+[User] did you see that meme?  
+[Bot] bruh 😂 that’s gold
+
+[User] describe the new update  
+[Bot] idk all the deets tbh. what part are you curious about?
+`;
+}
+
+setBasePrompt();
+const messageHistoryPrompt = global.basePrompt;
 
 const { token } = require( './config.json' );
 const { get } = require( "axios" );
@@ -78,11 +105,11 @@ client.on( 'messageCreate', msg => {
             //console.log( personality, phrase );
             if ( personalities[personality.toLowerCase()] ) {
                 SETTINGS.personality = personality.toLowerCase();
-                basePrompt = personalities[SETTINGS.personality];
+                setBasePrompt();
                 msg.react( "👍" );
             } else {
                 if ( personality === "custom" ) {
-                    basePrompt = phrase;
+                    setBasePrompt( phrase );
                     msg.react( "👍" );
                 }
             }
@@ -197,9 +224,7 @@ client.on( 'messageCreate', msg => {
                 askLLaMA( {
                     prompt: messageHistory,
                     tokens: SETTINGS.defaultTokens,
-                    messageHistoryPrompt: `${ baseMessageHistoryPrompt }
-You were mentioned in the last message.
-Respond with a single message AS YOURSELF to the last message to answer any questions and/or contribute to the conversation.`
+                    messageHistoryPrompt: messageHistoryPrompt
                 }, ( result ) => {
                     sendOutput( result, txt => msg.channel.send( txt ) );
                 } );

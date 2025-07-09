@@ -23,7 +23,7 @@ function sendOutput( msg, send ) {
     }
 }
 
-function askLLaMA( { prompt, tokens, base = (basePrompt + serverAwareness), crazy = false, messageHistoryPrompt }, callback ) {
+function askLLaMA( { prompt, tokens, base = basePrompt, crazy = false, messageHistoryPrompt }, callback ) {
     let data = {
         messages: [
             {
