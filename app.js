@@ -19,8 +19,8 @@ const client = new Discord.Client( {
 } );
 
 function startPersistentTyping( channel ) {
-    channel.sendTyping();
-    const interval = setInterval( () => channel.sendTyping(), 9000 );
+    channel.sendTyping().catch( () => {} );
+    const interval = setInterval( () => channel.sendTyping().catch( () => {} ), 9000 );
     return () => clearInterval( interval );
 }
 
