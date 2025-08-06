@@ -16,8 +16,17 @@ function sendOutput( msg, send ) {
         return;
     }
 
-    // Trim leading/trailing whitespace to avoid blank sends
-    msg = msg.trim();
+    // If the model returned analysis/final markers, keep only the final output
+    const finalMarker = '<|start|>assistant<|channel|>final<|message|>';
+    const altFinalMarker = '<|assistant|>final<|message|>';
+    if ( msg.includes( finalMarker ) ) {
+        msg = msg.split( finalMarker ).pop();
+    } else if ( msg.includes( altFinalMarker ) ) {
+        msg = msg.split( altFinalMarker ).pop();
+    }
+
+    // Remove wrapping quotes and trim leading/trailing whitespace
+    msg = msg.replace( /^"|"$/g, '' ).trim();
 
     const LIMIT = 2000;
     const SEARCH_RANGE = 20; // characters to look back for a space

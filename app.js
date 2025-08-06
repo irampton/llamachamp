@@ -125,7 +125,7 @@ function handleMessage( msg ) {
     if ( !msg.guild ) {
         const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
         getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
-            askLLaMA( { prompt: messageHistory + "\n[Bot]", tokens: SETTINGS.defaultTokens }, ( result ) => {
+            askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
                 sendOutput( result, txt => msg.channel.send( txt ) );
             } );
         } );
@@ -225,7 +225,7 @@ function handleMessage( msg ) {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                 askLLaMA( {
-                    prompt: messageHistory + "\n[Bot]",
+                    prompt: messageHistory,
                     tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
                     sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
@@ -244,7 +244,7 @@ function handleMessage( msg ) {
                 const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
                 getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                     askLLaMA( {
-                        prompt: messageHistory + "\n[Bot]",
+                        prompt: messageHistory,
                         tokens: SETTINGS.defaultTokens
                     }, ( result ) => {
                         sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
@@ -259,7 +259,7 @@ function handleMessage( msg ) {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                 askLLaMA( {
-                    prompt: messageHistory + "\n[Bot]",
+                    prompt: messageHistory,
                     tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
                     sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
