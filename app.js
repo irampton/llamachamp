@@ -78,14 +78,17 @@ Examples:
 
 setBasePrompt();
 
-const { token } = require( './config.json' );
+let token;
+if ( require.main === module ) {
+    ( { token } = require( './config.json' ) );
+}
 const { get } = require( "axios" );
 
 client.on( 'ready', () => {
     console.log( `Logged in as ${ client.user.tag }!` );
 } );
 
-client.on( 'messageCreate', msg => {
+function handleMessage( msg ) {
 
     // don't self reply, ever
     if ( msg.author.bot ) {
@@ -265,9 +268,9 @@ client.on( 'messageCreate', msg => {
             return;
         }
     }
-} );
+}
 
-client.login( token );
+client.on( 'messageCreate', handleMessage );
 
 function getPastMessages( channel, count, timestamp, callback ) {
     channel.messages.fetch( { limit: count } ) // Adjust limit if you need to fetch more than 100 messages
@@ -300,4 +303,9 @@ async function setUpInspire() {
     setNextInspirationalMessage( await client.channels.fetch( '705154122617323601' ) );
 }
 
-setUpInspire();
+if ( require.main === module ) {
+    client.login( token );
+    setUpInspire();
+}
+
+module.exports = { handleMessage, setBasePrompt, personalities, client };

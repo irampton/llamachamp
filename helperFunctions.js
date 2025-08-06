@@ -13,7 +13,7 @@ function sendOutput( msg, send ) {
     if ( msg.length > 2000 ) {
         while ( msg.length > 2000 ) {
             send( msg.slice( 0, 1800 ) );
-            msg = msg.slice( 1800, -1 );
+            msg = msg.slice( 1800 );
         }
     }
     try {
