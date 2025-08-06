@@ -18,6 +18,12 @@ const client = new Discord.Client( {
     ]
 } );
 
+function startPersistentTyping( channel ) {
+    channel.sendTyping();
+    const interval = setInterval( () => channel.sendTyping(), 9000 );
+    return () => clearInterval( interval );
+}
+
 const personalities = {
     sigma: "You are a sigma male body builder who does day trading on the side.",
     default: "You are a helpful friend, conversationalist, and assistant named LlamaChamp who answers questions in concise manner.",
@@ -124,8 +130,10 @@ function handleMessage( msg ) {
     // Handle DMs separate
     if ( !msg.guild ) {
         const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+        const stopTyping = startPersistentTyping( msg.channel );
         getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
             askLLaMA( { prompt: messageHistory, tokens: SETTINGS.defaultTokens }, ( result ) => {
+                stopTyping();
                 sendOutput( result, txt => msg.channel.send( txt ) );
             } );
         } );
@@ -193,8 +201,10 @@ function handleMessage( msg ) {
 
         //react with a llama so the user knows the prompt is being processed
         msg.react( "🦙" );
+        const stopTyping = startPersistentTyping( msg.channel );
 
         askLLaMA( { prompt, tokens }, ( result ) => {
+            stopTyping();
             sendOutput( result, txt => msg.reply( txt ) );
             msg.reactions.cache.get( '🦙' )?.users.remove( client.user.id );
         } );
@@ -223,11 +233,13 @@ function handleMessage( msg ) {
             return;
         } else {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+            const stopTyping = startPersistentTyping( msg.channel );
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                 askLLaMA( {
                     prompt: messageHistory,
                     tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
+                    stopTyping();
                     sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
                 } );
             } );
@@ -242,11 +254,13 @@ function handleMessage( msg ) {
         if ( /\?$/.test( msg.content ) ) {
             if ( Math.random() < SETTINGS.qResponseRate ) {
                 const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+                const stopTyping = startPersistentTyping( msg.channel );
                 getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                     askLLaMA( {
                         prompt: messageHistory,
                         tokens: SETTINGS.defaultTokens
                     }, ( result ) => {
+                        stopTyping();
                         sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
                     } );
                 } );
@@ -257,11 +271,13 @@ function handleMessage( msg ) {
         // if the message does not end in a question
         if ( Math.random() < SETTINGS.responseRate ) {
             const twelveHoursAgo = Date.now() - 12 * 60 * 60 * 1000;
+            const stopTyping = startPersistentTyping( msg.channel );
             getPastMessages( msg.channel, 5, twelveHoursAgo, messageHistory => {
                 askLLaMA( {
                     prompt: messageHistory,
                     tokens: SETTINGS.defaultTokens
                 }, ( result ) => {
+                    stopTyping();
                     sendOutput( result, txt => msg.channel.send( txt.split(/\r?\n/)[0] ) );
                 } );
             } );
