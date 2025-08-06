@@ -90,7 +90,15 @@ function askLLaMA( { prompt, tokens, base = basePrompt, crazy = false }, callbac
     }
 
     axios.post( "http://llama.cpp:8000/v1/chat/completions", data ).then( result => {
-        const text = result.data?.choices?.[0]?.message?.content?.[0]?.text || '';
+        const content = result?.data?.choices?.[0]?.message?.content;
+        let text = '';
+
+        if ( Array.isArray( content ) ) {
+            text = content.map( part => part?.text || '' ).join( '' );
+        } else if ( typeof content === 'string' ) {
+            text = content;
+        }
+
         callback( text );
     } ).catch( err => {
         console.log( err );
