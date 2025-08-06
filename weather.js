@@ -1,5 +1,5 @@
 const axios = require( "axios" );
-const { askLLaMA } = require( "./helperFunctions" );
+const { askLLaMA, handleDiscordError } = require( "./helperFunctions" );
 module.exports = {
     sendWeatherReport
 }
@@ -35,6 +35,6 @@ ${ question }`;
 
     const prompt = await getPrompt();
     askLLaMA( { prompt, tokens: 200 }, msg => {
-        channel.send( { content: msg } );
+        Promise.resolve( channel.send( { content: msg } ) ).catch( handleDiscordError );
     } );
 }
