@@ -10,12 +10,39 @@ const timeStringOptions = {
 };
 
 function sendOutput( msg, send ) {
-    if ( msg.length > 2000 ) {
-        while ( msg.length > 2000 ) {
-            send( msg.slice( 0, 1800 ) );
-            msg = msg.slice( 1800, -1 );
-        }
+    // Ignore attempts to send empty or whitespace-only messages
+    if ( !msg || !msg.trim() ) {
+        console.warn( 'Attempted to send an empty message. Skipping.' );
+        return;
     }
+
+    // Trim leading/trailing whitespace to avoid blank sends
+    msg = msg.trim();
+
+    const LIMIT = 2000;
+    const SEARCH_RANGE = 20; // characters to look back for a space
+
+    // Send the message in chunks if it exceeds Discord's character limit
+    while ( msg.length > LIMIT ) {
+        let splitPoint = LIMIT;
+        const space = msg.lastIndexOf( ' ', LIMIT );
+        if ( space !== -1 && space >= LIMIT - SEARCH_RANGE ) {
+            splitPoint = space;
+        }
+
+        const chunk = msg.slice( 0, splitPoint ).trimEnd();
+        if ( chunk.trim() ) {
+            send( chunk );
+        }
+
+        msg = msg.slice( splitPoint ).trimStart();
+    }
+
+    // Only send if there's content remaining after chunking
+    if ( msg.trim().length === 0 ) {
+        return;
+    }
+
     try {
         send( msg );
     } catch ( e ) {
