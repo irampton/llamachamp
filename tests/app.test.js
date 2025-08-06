@@ -13,6 +13,13 @@ test('sendOutput splits long messages', () => {
   outputs.forEach(o => assert(o.length <= 2000));
 });
 
+test('sendOutput only returns final chunk after markers', () => {
+  const outputs = [];
+  const input = '<|channel|>analysis<|message|>blah<|start|>assistant<|channel|>final<|message|>hello"';
+  sendOutput(input, msg => outputs.push(msg));
+  assert.deepStrictEqual(outputs, ['hello']);
+});
+
 test('handleMessage ignores messages from bots', () => {
   const msg = { author: { bot: true } };
   const result = handleMessage(msg);
