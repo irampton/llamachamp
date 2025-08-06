@@ -53,3 +53,74 @@ test('handleMessage responds to ?llamaOptions list', () => {
   const obj = JSON.parse(replies[0]);
   assert.ok(Object.prototype.hasOwnProperty.call(obj, 'defaultTokens'));
 });
+
+test('handleMessage keeps typing when mentioned', () => {
+  const axios = require('axios');
+  const origPost = axios.post;
+  axios.post = () => new Promise(() => {});
+
+  client.user = { id: '123' };
+  let typed = 0;
+  const intervals = [];
+  const origSetInterval = global.setInterval;
+  global.setInterval = fn => { intervals.push(fn); return 1; };
+
+  const msg = {
+    author: { bot: false, displayName: 'User' },
+    guild: {},
+    content: '<@123> hi',
+    mentions: { has: () => true, everyone: false },
+    channel: {
+      sendTyping: () => { typed++; },
+      send: () => {},
+      messages: { fetch: () => Promise.resolve({ filter: () => ({ sort: () => ({ forEach: () => {} }) }) }) }
+    }
+  };
+
+  handleMessage(msg);
+  assert.strictEqual(typed, 1);
+  intervals.forEach(fn => fn());
+  assert.ok(typed > 1);
+
+  global.setInterval = origSetInterval;
+  axios.post = origPost;
+});
+
+test('handleMessage keeps typing when randomly replying', () => {
+  const axios = require('axios');
+  const origPost = axios.post;
+  axios.post = () => new Promise(() => {});
+
+  client.user = { id: '123' };
+  SETTINGS.randomResponseOn = true;
+  SETTINGS.qResponseRate = 1;
+  const origRand = Math.random;
+  Math.random = () => 0;
+
+  let typed = 0;
+  const intervals = [];
+  const origSetInterval = global.setInterval;
+  global.setInterval = fn => { intervals.push(fn); return 1; };
+
+  const msg = {
+    author: { bot: false, displayName: 'User' },
+    guild: {},
+    content: 'hello?',
+    mentions: { has: () => false, everyone: false },
+    channel: {
+      sendTyping: () => { typed++; },
+      send: () => {},
+      messages: { fetch: () => Promise.resolve({ filter: () => ({ sort: () => ({ forEach: () => {} }) }) }) }
+    }
+  };
+
+  handleMessage(msg);
+  assert.strictEqual(typed, 1);
+  intervals.forEach(fn => fn());
+  assert.ok(typed > 1);
+
+  global.setInterval = origSetInterval;
+  Math.random = origRand;
+  SETTINGS.randomResponseOn = false;
+  axios.post = origPost;
+});
