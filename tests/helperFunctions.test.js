@@ -20,6 +20,18 @@ test('sendOutput ignores blank messages', () => {
   assert.deepStrictEqual(sent, []);
 });
 
+test('sendOutput catches send errors', async () => {
+  const errors = [];
+  const orig = console.error;
+  console.error = e => errors.push(e);
+  await new Promise(resolve => {
+    sendOutput('hi', () => Promise.reject({ code: 50013 }));
+    setImmediate(resolve);
+  });
+  console.error = orig;
+  assert.ok(errors.some(e => typeof e === 'string' && e.includes('Missing Permissions')));
+});
+
 // askLLaMA tests
 
 test('askLLaMA posts string prompt and returns text', async () => {

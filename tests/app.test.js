@@ -46,7 +46,7 @@ test('handleMessage responds to ?llamaOptions list', () => {
     guild: {},
     content: '?llamaOptions list',
     react: () => {},
-    reply: text => replies.push(text)
+    reply: text => { replies.push(text); return { catch: () => {} }; }
   };
   handleMessage(msg);
   assert.strictEqual(replies.length, 1);

@@ -1,6 +1,6 @@
 //load in settings from file
 const { SETTINGS } = require( './settings' );
-const { sendOutput, askLLaMA } = require( './helperFunctions' );
+const { sendOutput, askLLaMA, handleDiscordError } = require( './helperFunctions' );
 const { setNextInspirationalMessage, generateInspirationMessage } = require( './inspire' );
 const { sendWeatherReport } = require( './weather' );
 
@@ -96,7 +96,7 @@ function handleMessage( msg ) {
     }
 
     if ( msg.content === 'ping' ) {
-        msg.reply( 'pong' );
+        msg.reply( 'pong' ).catch( handleDiscordError );
         return;
     }
     if ( msg.content.toLowerCase().startsWith( "?llamaPersonality".toLowerCase() ) || msg.content.toLowerCase().startsWith( "?LP".toLowerCase() ) ) {
@@ -172,7 +172,7 @@ function handleMessage( msg ) {
                     randomResponseOn: SETTINGS.randomResponseOn,
                     responseRate: SETTINGS.responseRate,
                     qResponseRate: SETTINGS.qResponseRate
-                } ), null, 2 )
+                } ), null, 2 ).catch( handleDiscordError );
                 break;
             default:
                 msg.react( "👎" );

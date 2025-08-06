@@ -2,7 +2,8 @@ const axios = require( "axios" );
 module.exports = {
     sendOutput,
     askLLaMA,
-    randomInt
+    randomInt,
+    handleDiscordError
 };
 
 const timeStringOptions = {
@@ -41,7 +42,7 @@ function sendOutput( msg, send ) {
 
         const chunk = msg.slice( 0, splitPoint ).trimEnd();
         if ( chunk.trim() ) {
-            send( chunk );
+            Promise.resolve( send( chunk ) ).catch( handleDiscordError );
         }
 
         msg = msg.slice( splitPoint ).trimStart();
@@ -53,9 +54,17 @@ function sendOutput( msg, send ) {
     }
 
     try {
-        send( msg );
+        Promise.resolve( send( msg ) ).catch( handleDiscordError );
     } catch ( e ) {
-        console.error( e );
+        handleDiscordError( e );
+    }
+}
+
+function handleDiscordError( err ) {
+    if ( err?.code === 50013 ) {
+        console.error( 'Missing Permissions: unable to send message.' );
+    } else if ( err ) {
+        console.error( err );
     }
 }
 

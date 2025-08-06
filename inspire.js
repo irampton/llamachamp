@@ -5,7 +5,7 @@ module.exports = {
 
 const words = require( "./words(10000).json" );
 const axios = require( "axios" );
-const { askLLaMA, randomInt } = require( "./helperFunctions" );
+const { askLLaMA, randomInt, handleDiscordError } = require( "./helperFunctions" );
 
 async function generateInspirationMessage( channel, scheduleNext, forceSend = false ) {
     if ( randomInt( 0, 100 ) > 25 && !forceSend ) {
@@ -47,7 +47,7 @@ async function generateInspirationMessage( channel, scheduleNext, forceSend = fa
         crazy: true
     }, async ( res ) => {
         const msg = msgRegEx.exec( res )?.[1] ?? res;
-        channel.send( { content: msg } );
+        Promise.resolve( channel.send( { content: msg } ) ).catch( handleDiscordError );
     } );
 
     if ( scheduleNext ) {
